@@ -16,12 +16,18 @@ public class DatabaseConnection {
             "";
 
     public static Connection getConnection()
-            throws SQLException,
-                   ClassNotFoundException {
+            throws SQLException {
 
-        Class.forName(
-                "com.mysql.cj.jdbc.Driver"
-        );
+        try {
+            Class.forName(
+                    "com.mysql.cj.jdbc.Driver"
+            );
+        } catch (ClassNotFoundException e) {
+            throw new SQLException(
+                    "Pilote JDBC MySQL introuvable.",
+                    e
+            );
+        }
 
         return DriverManager.getConnection(
                 URL,

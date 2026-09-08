@@ -1,10 +1,9 @@
 package com.projet;
 
-import org.junit.Test;
+import junit.framework.TestCase;
 
-public class AppTest {
+public class AppTest extends TestCase {
 
-    @Test
     public void testApplication() {
 
         System.out.println(

@@ -1,1 +1,17 @@
+C:\Users\Administrator\BankManager\src\main\java\com\projet\database\DatabaseConnection.java
+C:\Users\Administrator\BankManager\src\main\java\com\projet\exception\ClientIntrouvableException.java
+C:\Users\Administrator\BankManager\src\main\java\com\projet\exception\SoldeInsuffisantException.java
+C:\Users\Administrator\BankManager\src\main\java\com\projet\exception\ValidationException.java
 C:\Users\Administrator\BankManager\src\main\java\com\projet\Main.java
+C:\Users\Administrator\BankManager\src\main\java\com\projet\model\Client.java
+C:\Users\Administrator\BankManager\src\main\java\com\projet\model\compte\Compte.java
+C:\Users\Administrator\BankManager\src\main\java\com\projet\model\compte\CompteCourant.java
+C:\Users\Administrator\BankManager\src\main\java\com\projet\model\compte\CompteEpargne.java
+C:\Users\Administrator\BankManager\src\main\java\com\projet\model\compte\Transaction.java
+C:\Users\Administrator\BankManager\src\main\java\com\projet\model\compte\TypeTransaction.java
+C:\Users\Administrator\BankManager\src\main\java\com\projet\repository\ClientRepository.java
+C:\Users\Administrator\BankManager\src\main\java\com\projet\repository\CompteRepository.java
+C:\Users\Administrator\BankManager\src\main\java\com\projet\repository\TransactionRepository.java
+C:\Users\Administrator\BankManager\src\main\java\com\projet\service\BankService.java
+C:\Users\Administrator\BankManager\src\main\java\com\projet\ui\Menu.java
+C:\Users\Administrator\BankManager\src\main\java\com\projet\util\ValidationUtils.java
