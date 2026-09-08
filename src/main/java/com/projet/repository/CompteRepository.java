@@ -159,4 +159,25 @@ public class CompteRepository {
                 "Compte introuvable : " + numero
         );
     }
+    // create a method to update the balance of a Compte in the database
+    public void mettreAJourSolde(
+        String numeroCompte,
+        double nouveauSolde)
+        throws SQLException {
+
+    String sql =
+            "UPDATE comptes SET solde = ? " +
+            "WHERE numero_compte = ?";
+
+    try (Connection connection =
+                 DatabaseConnection.getConnection();
+         PreparedStatement statement =
+                 connection.prepareStatement(sql)) {
+
+        statement.setDouble(1, nouveauSolde);
+        statement.setString(2, numeroCompte);
+
+        statement.executeUpdate();
+    }
+}
 }
