@@ -49,11 +49,13 @@ public class CompteRepositoryTest extends TestCase {
 	assertEquals(clientId, compteRecupere.getClient().getId());
 	assertEquals(1000.0, compteRecupere.getSolde());
 
-	compteRepository.mettreAJourSolde(numeroCompte, 1000.0);
+	// Valeur differente du solde initial (1000.0) : si mettreAJourSolde()
+	// ne fait rien ou echoue silencieusement, ce test le detectera.
+	compteRepository.mettreAJourSolde(numeroCompte, 1500.0);
 
 	Compte compteMisAJour =
 		compteRepository.rechercher(numeroCompte);
 
-	assertEquals(1000.0, compteMisAJour.getSolde());
+	assertEquals(1500.0, compteMisAJour.getSolde());
     }
 }

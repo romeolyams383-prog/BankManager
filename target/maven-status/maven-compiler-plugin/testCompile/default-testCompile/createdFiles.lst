@@ -2,3 +2,4 @@ com\projet\AppTest.class
 com\projet\DatabaseConnectionTest.class
 com\projet\ClientRepositoryTest.class
 com\projet\CompteRepositoryTest.class
+com\projet\TransactionRepositoryTest.class
