@@ -15,7 +15,7 @@ public class ClientRepository {
 
         String sql =
                 "INSERT INTO client " +
-                "(id, nom, prenom, telephone, email, mot_de_passe) " +
+                "(id, nom, prenoms, telephone, email, mot_de_passe) " +
                 "VALUES (?, ?, ?, ?, ?, ?)";
 
         try (Connection connection =
@@ -57,7 +57,7 @@ public class ClientRepository {
                         return new Client(
                                 result.getLong("id"),
                                 result.getString("nom"),
-                                result.getString("prenom"),
+                                result.getString("prenoms"),
                                 result.getString("telephone"),
                                 result.getString("email"),
                                 result.getString("mot_de_passe")
@@ -101,7 +101,7 @@ public class ClientRepository {
                     Client client = new Client(
                             result.getLong("id"),
                             result.getString("nom"),
-                            result.getString("prenom"),
+                            result.getString("prenoms"),
                             result.getString("telephone"),
                             result.getString("email"),
                             result.getString("mot_de_passe")

@@ -9,12 +9,15 @@ public class ClientRepositoryTest extends TestCase {
 
     public void testAjouterEtRechercherClient() throws Exception {
 
+        long clientId = System.currentTimeMillis();
+        String email = "jean.dupont." + clientId + "@gmail.com";
+
         Client client = new Client(
-                1,
+                clientId,
                 "Dupont",
                 "Jean",
                 "97000000",
-                "jean.dupont@gmail.com",
+                email,
                 "123456"
         );
 
@@ -26,7 +29,7 @@ public class ClientRepositoryTest extends TestCase {
 
         // Rechercher le client
         Client clientRecupere =
-                repository.rechercher(1);
+                repository.rechercher(clientId);
 
         // Vérifications
         assertNotNull(clientRecupere);
@@ -34,7 +37,7 @@ public class ClientRepositoryTest extends TestCase {
         assertEquals("Jean", clientRecupere.getPrenom());
         assertEquals("97000000", clientRecupere.getTelephone());
         assertEquals(
-                "jean.dupont@gmail.com",
+                email,
                 clientRecupere.getEmail()
         );
 
