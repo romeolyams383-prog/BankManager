@@ -16,7 +16,7 @@
     <property name="sun.java.launcher" value="SUN_STANDARD"/>
     <property name="user.country" value="US"/>
     <property name="sun.boot.library.path" value="C:\Program Files\Microsoft\jdk-25.0.4.7-hotspot\bin"/>
-    <property name="sun.java.command" value="C:\Users\Administrator\AppData\Local\Temp\surefire4133205133569112792\surefirebooter-20260909092330170_3.jar C:\Users\Administrator\AppData\Local\Temp\surefire4133205133569112792 2026-09-09T09-23-29_914-jvmRun1 surefire-20260909092330170_1tmp surefire_0-20260909092330170_2tmp"/>
+    <property name="sun.java.command" value="C:\Users\Administrator\AppData\Local\Temp\surefire12973831669001040665\surefirebooter-20260909112704638_3.jar C:\Users\Administrator\AppData\Local\Temp\surefire12973831669001040665 2026-09-09T11-27-04_520-jvmRun1 surefire-20260909112704638_1tmp surefire_0-20260909112704638_2tmp"/>
     <property name="jdk.debug" value="release"/>
     <property name="surefire.test.class.path" value="c:\Users\Administrator\BankManager\target\test-classes;c:\Users\Administrator\BankManager\target\classes;C:\Users\Administrator\.m2\repository\junit\junit\3.8.1\junit-3.8.1.jar;C:\Users\Administrator\.m2\repository\com\mysql\mysql-connector-j\8.0.33\mysql-connector-j-8.0.33.jar;C:\Users\Administrator\.m2\repository\com\google\protobuf\protobuf-java\3.21.9\protobuf-java-3.21.9.jar;"/>
     <property name="sun.cpu.endian" value="little"/>
@@ -31,7 +31,7 @@
     <property name="line.separator" value="&#10;"/>
     <property name="java.vm.specification.vendor" value="Oracle Corporation"/>
     <property name="java.specification.name" value="Java Platform API Specification"/>
-    <property name="surefire.real.class.path" value="C:\Users\Administrator\AppData\Local\Temp\surefire4133205133569112792\surefirebooter-20260909092330170_3.jar"/>
+    <property name="surefire.real.class.path" value="C:\Users\Administrator\AppData\Local\Temp\surefire12973831669001040665\surefirebooter-20260909112704638_3.jar"/>
     <property name="user.script" value=""/>
     <property name="sun.management.compiler" value="HotSpot 64-Bit Tiered Compilers"/>
     <property name="java.runtime.version" value="25.0.4+7-LTS"/>
@@ -62,7 +62,7 @@
     <property name="sun.io.unicode.encoding" value="UnicodeLittle"/>
     <property name="java.class.version" value="69.0"/>
   </properties>
-  <testcase name="testConnexion" classname="com.projet.DatabaseConnectionTest" time="0.001">
+  <testcase name="testConnexion" classname="com.projet.DatabaseConnectionTest" time="0.002">
     <system-out><![CDATA[Connexion MySQL réussie !
 ]]></system-out>
   </testcase>

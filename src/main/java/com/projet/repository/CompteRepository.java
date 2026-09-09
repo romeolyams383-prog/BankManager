@@ -4,7 +4,6 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Types;
 
 import com.projet.database.DatabaseConnection;
 import com.projet.exception.CompteIntrouvableException;
@@ -20,8 +19,8 @@ public class CompteRepository {
 
         String sql =
                 "INSERT INTO comptes " +
-                "(numero_compte, client_id, solde, " +
-                "type_compte, decouvert_autorise, taux_interet) " +
+                "(numero_compte, client_id, sold, " +
+                "type_compte, decouvert_autorise, `Taux interet`) " +
                 "VALUES (?, ?, ?, ?, ?, ?)";
 
         try (Connection connection =
@@ -59,9 +58,9 @@ public class CompteRepository {
                         courant.getDecouvertAutorise()
                 );
 
-                statement.setNull(
+                statement.setDouble(
                         6,
-                        Types.DECIMAL
+                        0.0
                 );
 
             } else {
@@ -74,9 +73,9 @@ public class CompteRepository {
                         "EPARGNE"
                 );
 
-                statement.setNull(
+                statement.setDouble(
                         5,
-                        Types.DECIMAL
+                        0.0
                 );
 
                 statement.setDouble(
@@ -127,9 +126,11 @@ public class CompteRepository {
                         String type =
                                 result.getString("type_compte");
 
-                        if ("COURANT".equals(type)) {
+                                                Compte compte;
 
-                            return new CompteCourant(
+                                                if ("COURANT".equals(type)) {
+
+                                                        compte = new CompteCourant(
                                     result.getString("numero_compte"),
                                     client,
                                     result.getDouble(
@@ -139,14 +140,17 @@ public class CompteRepository {
 
                         } else {
 
-                            return new CompteEpargne(
+                            compte = new CompteEpargne(
                                     result.getString("numero_compte"),
                                     client,
                                     result.getDouble(
-                                            "taux_interet"
+                                            "Taux interet"
                                     )
                             );
                         }
+
+                                                compte.setSolde(result.getDouble("sold"));
+                                                return compte;
 
                     } catch (Exception e) {
 
@@ -170,7 +174,7 @@ public class CompteRepository {
         throws SQLException {
 
     String sql =
-            "UPDATE comptes SET solde = ? " +
+            "UPDATE comptes SET sold = ? " +
             "WHERE numero_compte = ?";
 
     try (Connection connection =

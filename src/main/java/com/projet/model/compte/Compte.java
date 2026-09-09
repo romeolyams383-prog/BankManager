@@ -103,6 +103,10 @@ public abstract class Compte {
         return solde;
     }
 
+    public void setSolde(double solde) {
+        this.solde = solde;
+    }
+
     public LocalDateTime getDateCreation() {
         return dateCreation;
     }
