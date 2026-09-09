@@ -94,7 +94,7 @@ public class CompteRepository {
                 "cl.nom, cl.prenom, cl.telephone, " +
                 "cl.email, cl.mot_de_passe " +
                 "FROM comptes c " +
-                "JOIN clients cl ON c.client_id = cl.id " +
+                "JOIN client cl ON c.client_id = cl.id " +
                 "WHERE c.numero_compte = ?";
 
         try (Connection connection =

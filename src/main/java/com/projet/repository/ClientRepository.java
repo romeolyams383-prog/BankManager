@@ -14,7 +14,7 @@ public class ClientRepository {
             throws SQLException {
 
         String sql =
-                "INSERT INTO clients " +
+                "INSERT INTO client " +
                 "(id, nom, prenom, telephone, email, mot_de_passe) " +
                 "VALUES (?, ?, ?, ?, ?, ?)";
 
@@ -39,7 +39,7 @@ public class ClientRepository {
                    ClientIntrouvableException {
 
         String sql =
-                "SELECT * FROM clients WHERE id = ?";
+                "SELECT * FROM client WHERE id = ?";
 
         try (Connection connection =
                      DatabaseConnection.getConnection();
@@ -85,7 +85,7 @@ public class ClientRepository {
         List<Client> clients =
                 new ArrayList<Client>();
 
-        String sql = "SELECT * FROM clients";
+        String sql = "SELECT * FROM client";
 
         try (Connection connection =
                      DatabaseConnection.getConnection();

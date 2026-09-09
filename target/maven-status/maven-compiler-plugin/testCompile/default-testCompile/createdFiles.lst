@@ -1,2 +1,3 @@
 com\projet\AppTest.class
 com\projet\DatabaseConnectionTest.class
+com\projet\ClientRepositoryTest.class
