@@ -68,6 +68,15 @@ public class BankService {
         return compteRepository.rechercher(numero);
     }
 
+        public List<Transaction> getHistorique(String numeroCompte)
+                        throws SQLException,
+                                   CompteIntrouvableException {
+
+                rechercherCompte(numeroCompte);
+
+                return transactionRepository.trouverParCompte(numeroCompte);
+        }
+
     // =========================
     // DEPOT
     // =========================

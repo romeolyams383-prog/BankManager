@@ -45,18 +45,12 @@ public class CompteRepository {
 
             if (compte instanceof CompteCourant) {
 
-                CompteCourant courant =
-                        (CompteCourant) compte;
-
                 statement.setString(
                         4,
                         "COURANT"
                 );
 
-                statement.setDouble(
-                        5,
-                        courant.getDecouvertAutorise()
-                );
+                statement.setDouble(5, 0.0);
 
                 statement.setDouble(
                         6,

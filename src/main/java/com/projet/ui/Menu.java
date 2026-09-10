@@ -1,14 +1,14 @@
 package com.projet.ui;
 
-import java.sql.SQLException;
 import java.util.List;
 import java.util.Scanner;
+import java.util.UUID;
 
-import com.projet.exception.ValidationException;
 import com.projet.model.Client;
 import com.projet.model.compte.Compte;
 import com.projet.model.compte.CompteCourant;
 import com.projet.model.compte.CompteEpargne;
+import com.projet.model.compte.Transaction;
 import com.projet.service.BankService;
 
 public class Menu {
@@ -35,31 +35,11 @@ public class Menu {
             switch (choix) {
 
                 case 1:
-                    creerClient();
+                                                                                menuComptes();
                     break;
 
                 case 2:
-                    creerCompte();
-                    break;
-
-                case 3:
-                    consulterCompte();
-                    break;
-
-                case 4:
-                    deposer();
-                    break;
-
-                case 5:
-                    retirer();
-                    break;
-
-                case 6:
-                    effectuerVirement();
-                    break;
-
-                case 7:
-                    afficherClients();
+                                                                                menuOperations();
                     break;
 
                 case 0:
@@ -92,25 +72,10 @@ public class Menu {
                 "===================================="
         );
         System.out.println(
-                "1. Créer un client"
+                "1. Gestion des comptes"
         );
         System.out.println(
-                "2. Créer un compte"
-        );
-        System.out.println(
-                "3. Consulter un compte"
-        );
-        System.out.println(
-                "4. Déposer de l'argent"
-        );
-        System.out.println(
-                "5. Retirer de l'argent"
-        );
-        System.out.println(
-                "6. Effectuer un virement"
-        );
-        System.out.println(
-                "7. Afficher les clients"
+                "2. Opérations bancaires"
         );
         System.out.println(
                 "0. Quitter"
@@ -120,22 +85,78 @@ public class Menu {
         );
     }
 
-    private void creerClient() {
+        private void menuComptes() {
+
+                int choix;
+
+                do {
+                        System.out.println();
+                        System.out.println("===== GESTION DES COMPTES =====");
+                        System.out.println("1. Créer un compte");
+                        System.out.println("2. Consulter un compte");
+                        System.out.println("0. Retour");
+
+                        choix = lireEntier("Votre choix : ");
+
+                        switch (choix) {
+                                case 1:
+                                        creerCompte();
+                                        break;
+                                case 2:
+                                        consulterCompte();
+                                        break;
+                                case 0:
+                                        break;
+                                default:
+                                        System.out.println("Choix invalide.");
+                        }
+                } while (choix != 0);
+        }
+
+        private void menuOperations() {
+
+                int choix;
+
+                do {
+                        System.out.println();
+                        System.out.println("===== OPERATIONS BANCAIRES =====");
+                        System.out.println("1. Déposer de l'argent");
+                        System.out.println("2. Retirer de l'argent");
+                        System.out.println("3. Effectuer un virement");
+                        System.out.println("0. Retour");
+
+                        choix = lireEntier("Votre choix : ");
+
+                        switch (choix) {
+                                case 1:
+                                        deposer();
+                                        break;
+                                case 2:
+                                        retirer();
+                                        break;
+                                case 3:
+                                        effectuerVirement();
+                                        break;
+                                case 0:
+                                        break;
+                                default:
+                                        System.out.println("Choix invalide.");
+                        }
+                } while (choix != 0);
+        }
+
+    private void creerCompte() {
 
         try {
 
-            long id = lireLong("ID : ");
             String nom = lireTexte("Nom : ");
             String prenom = lireTexte("Prénom : ");
-            String telephone =
-                    lireTexte("Téléphone : ");
-            String email =
-                    lireTexte("Email : ");
-            String motDePasse =
-                    lireTexte("Mot de passe : ");
+            String telephone = lireTexte("Numéro de téléphone : ");
+            String email = lireTexte("Mail : ");
+            String motDePasse = lireTexte("Mot de passe : ");
 
             Client client = new Client(
-                    id,
+                    System.currentTimeMillis(),
                     nom,
                     prenom,
                     telephone,
@@ -143,41 +164,7 @@ public class Menu {
                     motDePasse
             );
 
-            banque.ajouterClient(client);
-
-            System.out.println(
-                    "Client créé avec succès."
-            );
-
-        } catch (ValidationException e) {
-
-            System.out.println(
-                    "Erreur : " + e.getMessage()
-            );
-
-        } catch (SQLException e) {
-
-            System.out.println(
-                    "Erreur base de données : "
-                    + e.getMessage()
-            );
-        }
-    }
-
-    private void creerCompte() {
-
-        try {
-
-            long idClient =
-                    lireLong("ID du client : ");
-
-            Client client =
-                    banque.rechercherClient(idClient);
-
-            String numero =
-                    lireTexte(
-                            "Numéro du compte : "
-                    );
+            String numero = genererNumeroCompte();
 
             System.out.println(
                     "1. Compte courant"
@@ -194,16 +181,10 @@ public class Menu {
 
             if (type == 1) {
 
-                double decouvert =
-                        lireDouble(
-                                "Découvert autorisé : "
-                        );
-
                 compte =
                         new CompteCourant(
                                 numero,
-                                client,
-                                decouvert
+                                client
                         );
 
             } else if (type == 2) {
@@ -229,10 +210,14 @@ public class Menu {
                 return;
             }
 
+                        banque.ajouterClient(client);
             banque.ajouterCompte(compte);
 
             System.out.println(
                     "Compte créé avec succès."
+            );
+            System.out.println(
+                    "Numéro du compte : " + numero
             );
 
         } catch (Exception e) {
@@ -242,6 +227,15 @@ public class Menu {
             );
         }
     }
+
+        private String genererNumeroCompte() {
+
+                return "CM-" + UUID.randomUUID()
+                                .toString()
+                                .replace("-", "")
+                                .substring(0, 12)
+                                .toUpperCase();
+        }
 
     private void consulterCompte() {
 
@@ -279,6 +273,8 @@ public class Menu {
 
             compte.afficherTypeCompte();
 
+                        menuCompteConsulte(compte);
+
         } catch (Exception e) {
 
             System.out.println(
@@ -286,6 +282,80 @@ public class Menu {
             );
         }
     }
+
+        private void menuCompteConsulte(Compte compte) {
+
+                int choix;
+
+                do {
+                        System.out.println();
+                        System.out.println("===== ACTIONS DU COMPTE =====");
+                        System.out.println("1. Effectuer un transfert");
+                        System.out.println("2. Voir l'historique");
+                        System.out.println("0. Retour");
+
+                        choix = lireEntier("Votre choix : ");
+
+                        switch (choix) {
+                                case 1:
+                                        effectuerTransfertDepuis(compte.getNumeroCompte());
+                                        break;
+                                case 2:
+                                        afficherHistorique(compte.getNumeroCompte());
+                                        break;
+                                case 0:
+                                        break;
+                                default:
+                                        System.out.println("Choix invalide.");
+                        }
+                } while (choix != 0);
+        }
+
+        private void effectuerTransfertDepuis(String numeroSource) {
+
+                try {
+                        String numeroDestination = lireTexte(
+                                        "Numéro du compte destinataire : "
+                        );
+                        double montant = lireDouble("Montant à transférer : ");
+
+                        banque.effectuerVirement(
+                                        numeroSource,
+                                        numeroDestination,
+                                        montant
+                        );
+
+                        System.out.println("Transfert effectué avec succès.");
+                        System.out.println(
+                                        "Nouveau solde : "
+                                        + banque.rechercherCompte(numeroSource).getSolde()
+                        );
+                } catch (Exception e) {
+                        System.out.println("Erreur : " + e.getMessage());
+                }
+        }
+
+        private void afficherHistorique(String numeroCompte) {
+
+                try {
+                        List<Transaction> transactions =
+                                        banque.getHistorique(numeroCompte);
+
+                        System.out.println();
+                        System.out.println("===== HISTORIQUE DU COMPTE =====");
+
+                        if (transactions.isEmpty()) {
+                                System.out.println("Aucune transaction enregistrée.");
+                                return;
+                        }
+
+                        for (Transaction transaction : transactions) {
+                                System.out.println(transaction);
+                        }
+                } catch (Exception e) {
+                        System.out.println("Erreur : " + e.getMessage());
+                }
+        }
 
     private void deposer() {
 
@@ -301,10 +371,7 @@ public class Menu {
                             "Montant : "
                     );
 
-            Compte compte =
-                    banque.rechercherCompte(numero);
-
-            compte.deposer(montant);
+            banque.deposer(numero, montant);
 
             System.out.println(
                     "Dépôt effectué."
@@ -332,10 +399,7 @@ public class Menu {
                             "Montant : "
                     );
 
-            Compte compte =
-                    banque.rechercherCompte(numero);
-
-            compte.retirer(montant);
+            banque.retirer(numero, montant);
 
             System.out.println(
                     "Retrait effectué."
@@ -386,33 +450,6 @@ public class Menu {
         }
     }
 
-    private void afficherClients() {
-
-        try {
-
-            List<Client> clients =
-                    banque.getClients();
-
-            System.out.println();
-            System.out.println(
-                    "===== CLIENTS ====="
-            );
-
-            for (Client client : clients) {
-
-                System.out.println(
-                        client
-                );
-            }
-
-        } catch (SQLException e) {
-
-            System.out.println(
-                    "Erreur : " + e.getMessage()
-            );
-        }
-    }
-
     private String lireTexte(String message) {
 
         System.out.print(message);
@@ -436,27 +473,6 @@ public class Menu {
 
                 System.out.println(
                         "Entrez un nombre entier."
-                );
-            }
-        }
-    }
-
-    private long lireLong(String message) {
-
-        while (true) {
-
-            try {
-
-                System.out.print(message);
-
-                return Long.parseLong(
-                        scanner.nextLine()
-                );
-
-            } catch (NumberFormatException e) {
-
-                System.out.println(
-                        "Entrez un nombre valide."
                 );
             }
         }

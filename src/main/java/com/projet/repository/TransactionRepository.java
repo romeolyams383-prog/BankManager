@@ -16,7 +16,7 @@ public class TransactionRepository {
             throws SQLException {
 
         String sql =
-                "INSERT INTO transaction " +
+                "INSERT INTO `transaction` " +
                 "(compte_numero, type_transaction, " +
                 "montant, description) " +
                 "VALUES (?, ?, ?, ?)";
@@ -58,7 +58,7 @@ public class TransactionRepository {
                 new ArrayList<Transaction>();
 
         String sql =
-                "SELECT * FROM transaction " +
+                "SELECT * FROM `transaction` " +
                 "WHERE compte_numero = ? " +
                 "ORDER BY date_transaction ASC";
 

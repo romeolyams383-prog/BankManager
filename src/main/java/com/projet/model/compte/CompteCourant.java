@@ -6,38 +6,18 @@ import com.projet.model.Client;
 
 public class CompteCourant extends Compte {
 
-    private double decouvertAutorise;
+    public CompteCourant(String numeroCompte,
+                         Client client)
+            throws ValidationException {
+
+        super(numeroCompte, client);
+    }
 
     public CompteCourant(String numeroCompte,
                          Client client,
                          double decouvertAutorise)
             throws ValidationException {
-
-        super(numeroCompte, client);
-
-        if (decouvertAutorise < 0) {
-            throw new ValidationException(
-                    "Le découvert autorisé ne peut pas être négatif."
-            );
-        }
-
-        this.decouvertAutorise = decouvertAutorise;
-    }
-
-    public double getDecouvertAutorise() {
-        return decouvertAutorise;
-    }
-
-    public void setDecouvertAutorise(double decouvertAutorise)
-            throws ValidationException {
-
-        if (decouvertAutorise < 0) {
-            throw new ValidationException(
-                    "Le découvert autorisé ne peut pas être négatif."
-            );
-        }
-
-        this.decouvertAutorise = decouvertAutorise;
+        this(numeroCompte, client);
     }
 
     @Override
@@ -51,9 +31,9 @@ public class CompteCourant extends Compte {
             );
         }
 
-        if (montant > solde + decouvertAutorise) {
+        if (montant > solde) {
             throw new SoldeInsuffisantException(
-                    "Solde insuffisant. Découvert autorisé dépassé."
+                "Solde insuffisant."
             );
         }
 

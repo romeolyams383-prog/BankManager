@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BankManager</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="app-shell">
+        <aside class="sidebar">
+            <div class="brand">
+                <span class="brand-mark">B</span>
+                <span>BankManager</span>
+            </div>
+            <nav class="main-nav" aria-label="Navigation principale">
+                <button class="nav-item active" data-view="overview"><span class="nav-icon">⌂</span> Vue d'ensemble</button>
+                <button class="nav-item" data-view="accounts"><span class="nav-icon">▣</span> Mes comptes</button>
+                <button class="nav-item" data-view="transactions"><span class="nav-icon">↗</span> Transactions</button>
+            </nav>
+            <div class="sidebar-footer">
+                <div class="security-note"><span class="status-dot"></span><span>Connexion sécurisée</span></div>
+                <button class="profile-button"><span class="avatar">AM</span><span><strong>Alex Martin</strong><small>Client particulier</small></span><span class="chevron">⌄</span></button>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <header class="topbar">
+                <div>
+                    <p class="eyebrow">Jeudi 10 septembre 2026</p>
+                    <h1 id="page-title">Bonjour, Alex <span class="wave">✦</span></h1>
+                </div>
+                <div class="topbar-actions">
+                    <button class="icon-button" title="Notifications" aria-label="Notifications"><span class="notification-dot"></span>♢</button>
+                    <button class="primary-button" id="new-account-button"><span>＋</span> Nouveau compte</button>
+                </div>
+            </header>
+
+            <section class="overview-view view active-view">
+                <div class="balance-banner">
+                    <div>
+                        <span class="label">Solde total disponible</span>
+                        <div class="total-balance" id="total-balance">12 480,50 €</div>
+                        <span class="balance-change">↗ 4,8 % <span>depuis le mois dernier</span></span>
+                    </div>
+                    <div class="balance-decoration"><span>€</span><span>€</span><span>€</span></div>
+                </div>
+
+                <div class="section-heading"><div><span class="section-kicker">VUE RAPIDE</span><h2>Vos comptes</h2></div><button class="text-button" data-view-link="accounts">Voir tous les comptes <span>→</span></button></div>
+                <div class="account-grid" id="account-grid"></div>
+
+                <div class="lower-grid">
+                    <section class="panel chart-panel">
+                        <div class="panel-heading"><div><span class="section-kicker">ÉVOLUTION</span><h2>Solde du mois</h2></div><button class="select-button">6 derniers mois <span>⌄</span></button></div>
+                        <div class="chart-wrap"><div class="y-axis"><span>15k</span><span>10k</span><span>5k</span><span>0</span></div><div class="chart"><div class="grid-lines"><i></i><i></i><i></i><i></i></div><svg viewBox="0 0 620 220" preserveAspectRatio="none" aria-label="Evolution du solde"><defs><linearGradient id="area" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#d6f16a" stop-opacity=".35"/><stop offset="1" stop-color="#d6f16a" stop-opacity="0"/></linearGradient></defs><path class="area" d="M0,170 C45,155 60,145 100,158 S155,125 200,137 S260,85 300,110 S355,90 395,104 S455,52 495,76 S550,42 620,45 L620,220 L0,220 Z"/><path class="line" d="M0,170 C45,155 60,145 100,158 S155,125 200,137 S260,85 300,110 S355,90 395,104 S455,52 495,76 S550,42 620,45"/><circle cx="495" cy="76" r="5" class="point"/></svg><div class="x-axis"><span>Avr</span><span>Mai</span><span>Juin</span><span>Juil</span><span>Août</span><span>Sept</span></div></div></div>
+                    </section>
+                    <section class="panel activity-panel"><div class="panel-heading"><div><span class="section-kicker">ACTIVITÉ RÉCENTE</span><h2>Dernières opérations</h2></div><button class="icon-button subtle" data-view-link="transactions">→</button></div><div id="recent-transactions"></div></section>
+                </div>
+            </section>
+
+            <section class="accounts-view view" hidden><div class="section-heading"><div><span class="section-kicker">GESTION</span><h2>Tous vos comptes</h2></div><button class="primary-button" id="new-account-button-alt"><span>＋</span> Nouveau compte</button></div><div class="account-grid account-grid-expanded" id="all-accounts"></div></section>
+            <section class="transactions-view view" hidden><div class="section-heading"><div><span class="section-kicker">HISTORIQUE</span><h2>Vos transactions</h2></div><select class="filter-select" id="transaction-filter"><option value="all">Tous les comptes</option></select></div><div class="panel transactions-panel" id="all-transactions"></div></section>
+        </main>
+    </div>
+
+    <div class="modal-backdrop" id="transfer-modal" hidden><div class="modal"><button class="modal-close" data-close="transfer-modal">×</button><span class="section-kicker">NOUVEAU TRANSFERT</span><h2>Envoyer de l'argent</h2><p class="modal-intro">Transférez de l'argent vers un compte existant.</p><form id="transfer-form"><label>Compte source<select id="source-account" required></select></label><label>Compte destinataire<input id="destination-account" placeholder="Ex. CM-A82F21B3D0C4" required></label><label>Montant<input id="transfer-amount" type="number" min="0.01" step="0.01" placeholder="0,00" required></label><button class="primary-button full-width" type="submit">Confirmer le transfert <span>→</span></button></form><p class="form-message" id="transfer-message"></p></div></div>
+    <div class="modal-backdrop" id="account-modal" hidden><div class="modal"><button class="modal-close" data-close="account-modal">×</button><span class="section-kicker">OUVRIR UN COMPTE</span><h2>Nouveau compte</h2><p class="modal-intro">Créez un compte bancaire en quelques instants.</p><form id="account-form"><label>Type de compte<select id="account-type"><option>Compte courant</option><option>Compte épargne</option></select></label><label>Nom du compte<input id="account-name" placeholder="Ex. Épargne projet" required></label><button class="primary-button full-width" type="submit">Créer le compte <span>→</span></button></form></div></div>
+    <script src="app.js"></script>
+</body>
+</html>
