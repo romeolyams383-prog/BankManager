@@ -2,6 +2,7 @@ package com.projet;
 
 import java.sql.Connection;
 
+import com.projet.api.ApiServer;
 import com.projet.database.DatabaseConnection;
 import com.projet.service.BankService;
 import com.projet.ui.Menu;
@@ -23,6 +24,8 @@ public class Main {
 
             BankService banque =
                     new BankService();
+
+            new ApiServer(banque).demarrer();
 
             Menu menu =
                     new Menu(banque);

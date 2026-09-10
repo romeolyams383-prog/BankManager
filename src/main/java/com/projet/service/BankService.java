@@ -68,6 +68,12 @@ public class BankService {
         return compteRepository.rechercher(numero);
     }
 
+        public List<Compte> getComptes()
+                        throws SQLException {
+
+                return compteRepository.trouverTous();
+        }
+
         public List<Transaction> getHistorique(String numeroCompte)
                         throws SQLException,
                                    CompteIntrouvableException {

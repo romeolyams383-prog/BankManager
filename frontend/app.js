@@ -1,16 +1,9 @@
 const state = {
-    accounts: [
-        { id: "CM-A82F21B3D0C4", name: "Compte courant", type: "COURANT", balance: 8240.50, dark: false },
-        { id: "CM-9D4A77E1B208", name: "Épargne projet", type: "EPARGNE", balance: 4240.00, dark: true }
-    ],
-    transactions: [
-        { type: "DEPOT", title: "Salaire - Septembre", date: "Aujourd'hui, 09:12", amount: 2850.00, account: "CM-A82F21B3D0C4" },
-        { type: "VIREMENT", title: "Vers CM-9D4A77E1B208", date: "Hier, 18:40", amount: -500.00, account: "CM-A82F21B3D0C4" },
-        { type: "RETRAIT", title: "Retrait distributeur", date: "08 sept. 2026", amount: -80.00, account: "CM-A82F21B3D0C4" },
-        { type: "DEPOT", title: "Versement épargne", date: "05 sept. 2026", amount: 1000.00, account: "CM-9D4A77E1B208" }
-    ]
+    accounts: [],
+    transactions: []
 };
 
+const API_URL = "http://localhost:8080/api";
 const euro = amount => new Intl.NumberFormat("fr-FR", { style: "currency", currency: "EUR" }).format(amount);
 const shortNumber = id => id.replace("CM-", "•••• ") + "";
 const accountIcon = type => type === "EPARGNE" ? "◒" : "◉";
@@ -31,6 +24,32 @@ function transactionMarkup(transaction) {
     const positive = transaction.amount >= 0;
     const icon = transaction.type === "VIREMENT" ? "↗" : positive ? "↓" : "↑";
     return `<div class="transaction-row"><span class="transaction-icon ${positive ? "" : "out"}">${icon}</span><div class="transaction-info"><strong>${transaction.title}</strong><small>${transaction.date}</small></div><span class="transaction-amount ${positive ? "positive" : "negative"}">${positive ? "+" : "−"}${euro(Math.abs(transaction.amount))}</span></div>`;
+}
+
+async function loadData() {
+    const response = await fetch(`${API_URL}/accounts`);
+    if (!response.ok) throw new Error("Impossible de charger les comptes.");
+    const accounts = await response.json();
+    state.accounts = accounts.map((account, index) => ({
+        ...account,
+        name: account.type === "EPARGNE" ? "Compte épargne" : "Compte courant",
+        dark: index % 2 === 1
+    }));
+    const histories = await Promise.all(state.accounts.map(async account => {
+        const historyResponse = await fetch(`${API_URL}/accounts/${account.id}/transactions`);
+        return historyResponse.ok ? historyResponse.json() : [];
+    }));
+    state.transactions = histories.flatMap((items, index) => items.map(item => ({
+        type: item.type,
+        title: item.description,
+        date: item.date.replace("T", " ").slice(0, 16),
+        amount: item.type === "RETRAIT" || (item.type === "VIREMENT" && item.description.includes("vers")) ? -item.amount : item.amount,
+        account: state.accounts[index].id
+    }))).reverse();
+    renderAccounts();
+    renderAccounts("all-accounts", false);
+    renderBalance();
+    renderTransactions();
 }
 
 function renderTransactions() {
@@ -83,21 +102,38 @@ document.getElementById("transfer-form").addEventListener("submit", event => {
     if (destination.id === source.id) { message.textContent = "Le compte source et le destinataire doivent être différents."; return; }
     if (!amount || amount <= 0) { message.textContent = "Le montant doit être supérieur à zéro."; return; }
     if (source.balance < amount) { message.textContent = "Solde insuffisant pour effectuer ce transfert."; return; }
-    source.balance -= amount;
-    destination.balance += amount;
-    state.transactions.unshift({ type: "VIREMENT", title: `Vers ${destination.id}`, date: "À l'instant", amount: -amount, account: source.id });
-    renderAccounts(); renderAccounts("all-accounts", false); renderBalance(); renderTransactions(); closeModal("transfer-modal");
+    const response = await fetch(`${API_URL}/transfers`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ source: source.id, destination: destination.id, montant: amount })
+    });
+    const result = await response.json();
+    if (!response.ok) { message.textContent = result.error || "Le transfert a échoué."; return; }
+    await loadData();
+    closeModal("transfer-modal");
 });
 
-document.getElementById("account-form").addEventListener("submit", event => {
+document.getElementById("account-form").addEventListener("submit", async event => {
     event.preventDefault();
-    const id = `CM-${crypto.randomUUID().replaceAll("-", "").slice(0, 12).toUpperCase()}`;
-    const type = document.getElementById("account-type").value;
-    state.accounts.push({ id, name: document.getElementById("account-name").value.trim(), type: type.includes("épargne") ? "EPARGNE" : "COURANT", balance: 0, dark: state.accounts.length % 2 === 1 });
-    renderAccounts(); renderAccounts("all-accounts", false); renderBalance(); renderTransactions(); closeModal("account-modal"); event.target.reset();
+    const response = await fetch(`${API_URL}/accounts`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+            nom: document.getElementById("account-last-name").value,
+            prenom: document.getElementById("account-first-name").value,
+            telephone: document.getElementById("account-phone").value,
+            email: document.getElementById("account-email").value,
+            motDePasse: document.getElementById("account-password").value,
+            type: document.getElementById("account-type").value
+        })
+    });
+    if (!response.ok) return;
+    await loadData();
+    closeModal("account-modal");
+    event.target.reset();
 });
 
-renderAccounts();
-renderAccounts("all-accounts", false);
-renderBalance();
-renderTransactions();
+loadData().catch(error => {
+    document.getElementById("total-balance").textContent = "API indisponible";
+    document.getElementById("recent-transactions").innerHTML = `<p class="empty-state">${error.message}</p>`;
+});

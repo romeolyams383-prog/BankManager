@@ -4,6 +4,8 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
 
 import com.projet.database.DatabaseConnection;
 import com.projet.exception.CompteIntrouvableException;
@@ -161,6 +163,65 @@ public class CompteRepository {
                 "Compte introuvable : " + numero
         );
     }
+
+        public List<Compte> trouverTous()
+                        throws SQLException {
+
+                List<Compte> comptes = new ArrayList<Compte>();
+                String sql =
+                                "SELECT c.*, " +
+                                "cl.nom, cl.prenoms, cl.telephone, " +
+                                "cl.email, cl.mot_de_passe " +
+                                "FROM comptes c " +
+                                "JOIN client cl ON c.client_id = cl.id " +
+                                "ORDER BY c.numero_compte";
+
+                try (Connection connection = DatabaseConnection.getConnection();
+                         PreparedStatement statement = connection.prepareStatement(sql);
+                         ResultSet result = statement.executeQuery()) {
+
+                        while (result.next()) {
+                                comptes.add(reconstruire(result));
+                        }
+                }
+
+                return comptes;
+        }
+
+        private Compte reconstruire(ResultSet result)
+                        throws SQLException {
+
+                try {
+                        Client client = new Client(
+                                        result.getLong("client_id"),
+                                        result.getString("nom"),
+                                        result.getString("prenoms"),
+                                        result.getString("telephone"),
+                                        result.getString("email"),
+                                        result.getString("mot_de_passe")
+                        );
+
+                        Compte compte;
+                        if ("COURANT".equals(result.getString("type_compte"))) {
+                                compte = new CompteCourant(
+                                                result.getString("numero_compte"), client
+                                );
+                        } else {
+                                compte = new CompteEpargne(
+                                                result.getString("numero_compte"),
+                                                client,
+                                                result.getDouble("Taux interet")
+                                );
+                        }
+
+                        compte.setSolde(result.getDouble("sold"));
+                        return compte;
+                } catch (Exception e) {
+                        throw new SQLException(
+                                        "Erreur lors de la reconstruction du compte.", e
+                        );
+                }
+        }
     // create a method to update the balance of a Compte in the database
     public void mettreAJourSolde(
         String numeroCompte,
