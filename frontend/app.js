@@ -4,9 +4,16 @@ const state = {
 };
 
 const API_URL = "http://localhost:8080/api";
+const client = JSON.parse(localStorage.getItem("bankmanager-client") || "null");
 const euro = amount => new Intl.NumberFormat("fr-FR", { style: "currency", currency: "EUR" }).format(amount);
 const shortNumber = id => id.replace("CM-", "•••• ") + "";
 const accountIcon = type => type === "EPARGNE" ? "◒" : "◉";
+
+function apiFetch(path, options = {}) {
+    const headers = { ...(options.headers || {}) };
+    if (client) headers["X-Client-Id"] = String(client.id);
+    return fetch(`${API_URL}${path}`, { ...options, headers });
+}
 
 function renderAccounts(targetId = "account-grid", includeAdd = true) {
     const target = document.getElementById(targetId);
@@ -27,7 +34,7 @@ function transactionMarkup(transaction) {
 }
 
 async function loadData() {
-    const response = await fetch(`${API_URL}/accounts`);
+    const response = await apiFetch("/accounts");
     if (!response.ok) throw new Error("Impossible de charger les comptes.");
     const accounts = await response.json();
     state.accounts = accounts.map((account, index) => ({
@@ -36,7 +43,7 @@ async function loadData() {
         dark: index % 2 === 1
     }));
     const histories = await Promise.all(state.accounts.map(async account => {
-        const historyResponse = await fetch(`${API_URL}/accounts/${account.id}/transactions`);
+        const historyResponse = await apiFetch(`/accounts/${account.id}/transactions`);
         return historyResponse.ok ? historyResponse.json() : [];
     }));
     state.transactions = histories.flatMap((items, index) => items.map(item => ({
@@ -77,6 +84,20 @@ function openTransfer(sourceId = state.accounts[0].id) {
     openModal("transfer-modal");
 }
 
+function openOperation(operation) {
+    const account = document.getElementById("operation-account");
+    account.innerHTML = state.accounts.map(item =>
+        `<option value="${item.id}">${item.name} - ${euro(item.balance)}</option>`
+    ).join("");
+    document.getElementById("operation-kicker").textContent = operation === "deposit" ? "DÉPÔT" : "RETRAIT";
+    document.getElementById("operation-title").textContent = operation === "deposit" ? "Déposer de l'argent" : "Retirer de l'argent";
+    document.getElementById("operation-intro").textContent = operation === "deposit" ? "Créditez un compte existant." : "Retirez de l'argent du solde disponible.";
+    document.getElementById("operation-submit").firstChild.textContent = operation === "deposit" ? "Confirmer le dépôt " : "Confirmer le retrait ";
+    document.getElementById("operation-form").dataset.operation = operation;
+    document.getElementById("operation-message").textContent = "";
+    openModal("operation-modal");
+}
+
 function changeView(view) {
     document.querySelectorAll(".view").forEach(section => { section.hidden = !section.classList.contains(`${view}-view`); });
     document.querySelectorAll(".nav-item").forEach(item => item.classList.toggle("active", item.dataset.view === view));
@@ -89,8 +110,12 @@ document.querySelectorAll("[data-view-link]").forEach(item => item.addEventListe
 document.querySelectorAll("[data-close]").forEach(button => button.addEventListener("click", () => closeModal(button.dataset.close)));
 document.getElementById("new-account-button").addEventListener("click", () => openModal("account-modal"));
 document.getElementById("new-account-button-alt").addEventListener("click", () => openModal("account-modal"));
+document.querySelectorAll("[data-operation]").forEach(button => button.addEventListener("click", () => {
+    if (button.dataset.operation === "transfer") openTransfer();
+    else openOperation(button.dataset.operation);
+}));
 
-document.getElementById("transfer-form").addEventListener("submit", event => {
+document.getElementById("transfer-form").addEventListener("submit", async event => {
     event.preventDefault();
     const sourceId = document.getElementById("source-account").value;
     const destinationId = document.getElementById("destination-account").value.trim().toUpperCase();
@@ -102,7 +127,7 @@ document.getElementById("transfer-form").addEventListener("submit", event => {
     if (destination.id === source.id) { message.textContent = "Le compte source et le destinataire doivent être différents."; return; }
     if (!amount || amount <= 0) { message.textContent = "Le montant doit être supérieur à zéro."; return; }
     if (source.balance < amount) { message.textContent = "Solde insuffisant pour effectuer ce transfert."; return; }
-    const response = await fetch(`${API_URL}/transfers`, {
+    const response = await apiFetch("/transfers", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ source: source.id, destination: destination.id, montant: amount })
@@ -115,17 +140,10 @@ document.getElementById("transfer-form").addEventListener("submit", event => {
 
 document.getElementById("account-form").addEventListener("submit", async event => {
     event.preventDefault();
-    const response = await fetch(`${API_URL}/accounts`, {
+    const response = await apiFetch("/accounts", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-            nom: document.getElementById("account-last-name").value,
-            prenom: document.getElementById("account-first-name").value,
-            telephone: document.getElementById("account-phone").value,
-            email: document.getElementById("account-email").value,
-            motDePasse: document.getElementById("account-password").value,
-            type: document.getElementById("account-type").value
-        })
+        body: JSON.stringify({ type: document.getElementById("account-type").value })
     });
     if (!response.ok) return;
     await loadData();
@@ -133,7 +151,82 @@ document.getElementById("account-form").addEventListener("submit", async event =
     event.target.reset();
 });
 
-loadData().catch(error => {
-    document.getElementById("total-balance").textContent = "API indisponible";
-    document.getElementById("recent-transactions").innerHTML = `<p class="empty-state">${error.message}</p>`;
+document.getElementById("operation-form").addEventListener("submit", async event => {
+    event.preventDefault();
+    const operation = event.target.dataset.operation;
+    const account = document.getElementById("operation-account").value;
+    const amount = Number(document.getElementById("operation-amount").value);
+    const message = document.getElementById("operation-message");
+    const endpoint = operation === "deposit" ? "deposits" : "withdrawals";
+    const response = await apiFetch(`/${endpoint}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ compte: account, montant: amount })
+    });
+    const result = await response.json();
+    if (!response.ok) {
+        message.textContent = result.error || "L'opération a échoué.";
+        return;
+    }
+    await loadData();
+    closeModal("operation-modal");
+    event.target.reset();
 });
+
+async function connect(event) {
+    event.preventDefault();
+    const message = document.getElementById("login-message");
+    const response = await fetch(`${API_URL}/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+            email: document.getElementById("login-email").value,
+            motDePasse: document.getElementById("login-password").value
+        })
+    });
+    const result = await response.json();
+    if (!response.ok) {
+        message.textContent = result.error || "Email ou mot de passe incorrect.";
+        return;
+    }
+    localStorage.setItem("bankmanager-client", JSON.stringify(result));
+    window.location.reload();
+}
+
+document.getElementById("login-form").addEventListener("submit", connect);
+document.getElementById("show-register").addEventListener("click", () => openModal("register-modal"));
+
+document.getElementById("register-form").addEventListener("submit", async event => {
+    event.preventDefault();
+    const message = document.getElementById("register-message");
+    const response = await fetch(`${API_URL}/register`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+            nom: document.getElementById("register-last-name").value,
+            prenom: document.getElementById("register-first-name").value,
+            telephone: document.getElementById("register-phone").value,
+            email: document.getElementById("register-email").value,
+            motDePasse: document.getElementById("register-password").value,
+            type: document.getElementById("register-type").value
+        })
+    });
+    const result = await response.json();
+    if (!response.ok) {
+        message.textContent = result.error || "Inscription impossible.";
+        return;
+    }
+    localStorage.setItem("bankmanager-client", JSON.stringify(result));
+    window.location.reload();
+});
+
+if (client) {
+    document.body.classList.add("has-session");
+    document.querySelector(".app-shell").classList.add("authenticated");
+    document.querySelector(".profile-button strong").textContent = `${client.prenom} ${client.nom}`;
+    document.querySelector(".profile-button .avatar").textContent = `${client.prenom[0]}${client.nom[0]}`.toUpperCase();
+    loadData().catch(error => {
+        document.getElementById("total-balance").textContent = "API indisponible";
+        document.getElementById("recent-transactions").innerHTML = `<p class="empty-state">${error.message}</p>`;
+    });
+}

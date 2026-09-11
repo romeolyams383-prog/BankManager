@@ -45,6 +45,13 @@ public class BankService {
         return clientRepository.rechercher(id);
     }
 
+        public Client authentifier(String email, String motDePasse)
+                        throws SQLException,
+                                   ClientIntrouvableException {
+
+                return clientRepository.authentifier(email, motDePasse);
+        }
+
     public List<Client> getClients()
             throws SQLException {
 
@@ -72,6 +79,24 @@ public class BankService {
                         throws SQLException {
 
                 return compteRepository.trouverTous();
+        }
+
+        public List<Compte> getComptes(long clientId)
+                        throws SQLException {
+
+                return compteRepository.trouverParClient(clientId);
+        }
+
+        public Compte verifierProprietaire(String numeroCompte, long clientId)
+                        throws SQLException,
+                                   CompteIntrouvableException,
+                                   ValidationException {
+
+                Compte compte = rechercherCompte(numeroCompte);
+                if (compte.getClient().getId() != clientId) {
+                        throw new ValidationException("Ce compte ne vous appartient pas.");
+                }
+                return compte;
         }
 
         public List<Transaction> getHistorique(String numeroCompte)

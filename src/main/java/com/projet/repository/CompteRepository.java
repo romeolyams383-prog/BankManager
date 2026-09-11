@@ -188,6 +188,29 @@ public class CompteRepository {
                 return comptes;
         }
 
+        public List<Compte> trouverParClient(long clientId)
+                        throws SQLException {
+
+                List<Compte> comptes = new ArrayList<Compte>();
+                String sql =
+                                "SELECT c.*, cl.nom, cl.prenoms, cl.telephone, " +
+                                "cl.email, cl.mot_de_passe " +
+                                "FROM comptes c JOIN client cl ON c.client_id = cl.id " +
+                                "WHERE c.client_id = ? ORDER BY c.numero_compte";
+
+                try (Connection connection = DatabaseConnection.getConnection();
+                         PreparedStatement statement = connection.prepareStatement(sql)) {
+                        statement.setLong(1, clientId);
+                        try (ResultSet result = statement.executeQuery()) {
+                                while (result.next()) {
+                                        comptes.add(reconstruire(result));
+                                }
+                        }
+                }
+
+                return comptes;
+        }
+
         private Compte reconstruire(ResultSet result)
                         throws SQLException {
 

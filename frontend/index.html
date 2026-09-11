@@ -10,6 +10,21 @@
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
+    <div class="login-screen" id="login-screen">
+        <div class="login-card">
+            <div class="brand"><span class="brand-mark">B</span><span>BankManager</span></div>
+            <span class="section-kicker">ESPACE CLIENT</span>
+            <h1>Bienvenue dans votre espace</h1>
+            <p>Connectez-vous pour accéder uniquement à vos comptes et opérations.</p>
+            <form id="login-form">
+                <label>Email<input id="login-email" type="email" required></label>
+                <label>Mot de passe<input id="login-password" type="password" required></label>
+                <button class="primary-button full-width" type="submit">Se connecter <span>→</span></button>
+            </form>
+            <p class="form-message" id="login-message"></p>
+            <button class="link-button" id="show-register" type="button">Je suis un nouveau client</button>
+        </div>
+    </div>
     <div class="app-shell">
         <aside class="sidebar">
             <div class="brand">
@@ -17,8 +32,7 @@
                 <span>BankManager</span>
             </div>
             <nav class="main-nav" aria-label="Navigation principale">
-                <button class="nav-item active" data-view="overview"><span class="nav-icon">⌂</span> Vue d'ensemble</button>
-                <button class="nav-item" data-view="accounts"><span class="nav-icon">▣</span> Mes comptes</button>
+                <button class="nav-item active" data-view="accounts"><span class="nav-icon">▣</span> Mes comptes</button>
                 <button class="nav-item" data-view="transactions"><span class="nav-icon">↗</span> Transactions</button>
             </nav>
             <div class="sidebar-footer">
@@ -39,7 +53,7 @@
                 </div>
             </header>
 
-            <section class="overview-view view active-view">
+            <section class="overview-view view" hidden>
                 <div class="balance-banner">
                     <div>
                         <span class="label">Solde total disponible</span>
@@ -52,6 +66,12 @@
                 <div class="section-heading"><div><span class="section-kicker">VUE RAPIDE</span><h2>Vos comptes</h2></div><button class="text-button" data-view-link="accounts">Voir tous les comptes <span>→</span></button></div>
                 <div class="account-grid" id="account-grid"></div>
 
+                <div class="quick-actions">
+                    <button class="action-button" data-operation="deposit"><span class="action-icon deposit">↓</span><span><strong>Déposer de l'argent</strong><small>Créditer un compte</small></span><b>→</b></button>
+                    <button class="action-button" data-operation="withdraw"><span class="action-icon withdraw">↑</span><span><strong>Retirer de l'argent</strong><small>Depuis un compte</small></span><b>→</b></button>
+                    <button class="action-button" data-operation="transfer"><span class="action-icon transfer">↗</span><span><strong>Faire un transfert</strong><small>Vers un compte existant</small></span><b>→</b></button>
+                </div>
+
                 <div class="lower-grid">
                     <section class="panel chart-panel">
                         <div class="panel-heading"><div><span class="section-kicker">ÉVOLUTION</span><h2>Solde du mois</h2></div><button class="select-button">6 derniers mois <span>⌄</span></button></div>
@@ -61,13 +81,15 @@
                 </div>
             </section>
 
-            <section class="accounts-view view" hidden><div class="section-heading"><div><span class="section-kicker">GESTION</span><h2>Tous vos comptes</h2></div><button class="primary-button" id="new-account-button-alt"><span>＋</span> Nouveau compte</button></div><div class="account-grid account-grid-expanded" id="all-accounts"></div></section>
+            <section class="accounts-view view active-view"><div class="section-heading"><div><span class="section-kicker">GESTION</span><h2>Tous vos comptes</h2></div><button class="primary-button" id="new-account-button-alt"><span>＋</span> Nouveau compte</button></div><div class="account-grid account-grid-expanded" id="all-accounts"></div><div class="quick-actions"><button class="action-button" data-operation="deposit"><span class="action-icon deposit">↓</span><span><strong>Déposer de l'argent</strong><small>Créditer un compte</small></span><b>→</b></button><button class="action-button" data-operation="withdraw"><span class="action-icon withdraw">↑</span><span><strong>Retirer de l'argent</strong><small>Depuis un compte</small></span><b>→</b></button><button class="action-button" data-operation="transfer"><span class="action-icon transfer">↗</span><span><strong>Faire un transfert</strong><small>Vers un compte existant</small></span><b>→</b></button></div></section>
             <section class="transactions-view view" hidden><div class="section-heading"><div><span class="section-kicker">HISTORIQUE</span><h2>Vos transactions</h2></div><select class="filter-select" id="transaction-filter"><option value="all">Tous les comptes</option></select></div><div class="panel transactions-panel" id="all-transactions"></div></section>
         </main>
     </div>
 
     <div class="modal-backdrop" id="transfer-modal" hidden><div class="modal"><button class="modal-close" data-close="transfer-modal">×</button><span class="section-kicker">NOUVEAU TRANSFERT</span><h2>Envoyer de l'argent</h2><p class="modal-intro">Transférez de l'argent vers un compte existant.</p><form id="transfer-form"><label>Compte source<select id="source-account" required></select></label><label>Compte destinataire<input id="destination-account" placeholder="Ex. CM-A82F21B3D0C4" required></label><label>Montant<input id="transfer-amount" type="number" min="0.01" step="0.01" placeholder="0,00" required></label><button class="primary-button full-width" type="submit">Confirmer le transfert <span>→</span></button></form><p class="form-message" id="transfer-message"></p></div></div>
-    <div class="modal-backdrop" id="account-modal" hidden><div class="modal"><button class="modal-close" data-close="account-modal">×</button><span class="section-kicker">OUVRIR UN COMPTE</span><h2>Nouveau compte</h2><p class="modal-intro">Créez un compte bancaire en quelques instants.</p><form id="account-form"><label>Nom<input id="account-last-name" required></label><label>Prénom<input id="account-first-name" required></label><label>Téléphone<input id="account-phone" required></label><label>Email<input id="account-email" type="email" required></label><label>Mot de passe<input id="account-password" type="password" required></label><label>Type de compte<select id="account-type"><option value="COURANT">Compte courant</option><option value="EPARGNE">Compte épargne</option></select></label><button class="primary-button full-width" type="submit">Créer le compte <span>→</span></button></form></div></div>
+    <div class="modal-backdrop" id="operation-modal" hidden><div class="modal"><button class="modal-close" data-close="operation-modal">×</button><span class="section-kicker" id="operation-kicker">OPÉRATION</span><h2 id="operation-title">Opération bancaire</h2><p class="modal-intro" id="operation-intro">Mettez à jour le solde d'un compte.</p><form id="operation-form"><label>Compte<select id="operation-account" required></select></label><label>Montant<input id="operation-amount" type="number" min="0.01" step="0.01" placeholder="0,00" required></label><button class="primary-button full-width" id="operation-submit" type="submit">Confirmer <span>→</span></button></form><p class="form-message" id="operation-message"></p></div></div>
+    <div class="modal-backdrop" id="account-modal" hidden><div class="modal"><button class="modal-close" data-close="account-modal">×</button><span class="section-kicker">OUVRIR UN COMPTE</span><h2>Nouveau compte</h2><p class="modal-intro">Le compte sera rattaché à votre profil connecté.</p><form id="account-form"><label>Type de compte<select id="account-type"><option value="COURANT">Compte courant</option><option value="EPARGNE">Compte épargne</option></select></label><button class="primary-button full-width" type="submit">Créer le compte <span>→</span></button></form></div></div>
+    <div class="modal-backdrop" id="register-modal" hidden><div class="modal"><button class="modal-close" data-close="register-modal">×</button><span class="section-kicker">INSCRIPTION</span><h2>Créer un espace client</h2><p class="modal-intro">Vos informations serviront à créer votre premier compte.</p><form id="register-form"><label>Nom<input id="register-last-name" required></label><label>Prénom<input id="register-first-name" required></label><label>Téléphone<input id="register-phone" required></label><label>Email<input id="register-email" type="email" required></label><label>Mot de passe<input id="register-password" type="password" minlength="4" required></label><label>Type de compte<select id="register-type"><option value="COURANT">Compte courant</option><option value="EPARGNE">Compte épargne</option></select></label><button class="primary-button full-width" type="submit">Créer mon espace <span>→</span></button></form><p class="form-message" id="register-message"></p></div></div>
     <script src="app.js"></script>
 </body>
 </html>

@@ -79,6 +79,43 @@ public class ClientRepository {
         );
     }
 
+        public Client authentifier(String email, String motDePasse)
+                        throws SQLException,
+                                   ClientIntrouvableException {
+
+                String sql =
+                                "SELECT * FROM client " +
+                                "WHERE email = ? AND mot_de_passe = ?";
+
+                try (Connection connection = DatabaseConnection.getConnection();
+                         PreparedStatement statement = connection.prepareStatement(sql)) {
+
+                        statement.setString(1, email);
+                        statement.setString(2, motDePasse);
+
+                        try (ResultSet result = statement.executeQuery()) {
+                                if (result.next()) {
+                                        try {
+                                                return new Client(
+                                                                result.getLong("id"),
+                                                                result.getString("nom"),
+                                                                result.getString("prenoms"),
+                                                                result.getString("telephone"),
+                                                                result.getString("email"),
+                                                                result.getString("mot_de_passe")
+                                                );
+                                        } catch (Exception e) {
+                                                throw new SQLException(
+                                                                "Erreur lors de la création du client.", e
+                                                );
+                                        }
+                                }
+                        }
+                }
+
+                throw new ClientIntrouvableException("Email ou mot de passe incorrect.");
+        }
+
     public List<Client> trouverTous()
             throws SQLException {
 
