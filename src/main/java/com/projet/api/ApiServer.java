@@ -1,7 +1,6 @@
 package com.projet.api;
 
-import com.projet.exception.CompteIntrouvableException;
-import com.projet.exception.SoldeInsuffisantException;
+import com.projet.exception.ClientIntrouvableException;
 import com.projet.exception.ValidationException;
 import com.projet.model.Client;
 import com.projet.model.compte.Compte;
@@ -18,6 +17,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
+import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -80,8 +80,11 @@ public class ApiServer {
                 }
 
                 if ("GET".equals(method) && "/api/accounts".equals(path)) {
-                    send(exchange, 200,
-                            comptesJson(banque.getComptes(clientId(exchange))));
+                    Client client = client(exchange);
+                    List<Compte> comptes = "ADMIN".equals(client.getRole())
+                        ? banque.getComptes()
+                        : banque.getComptes(client.getId());
+                    send(exchange, 200, comptesJson(comptes));
                     return;
                 }
 
@@ -105,12 +108,29 @@ public class ApiServer {
                 }
 
                 if ("POST".equals(method) && "/api/deposits".equals(path)) {
-                    effectuerDepot(exchange, readBody(exchange), clientId(exchange));
+                    Client client = client(exchange);
+                    if (!"ADMIN".equals(client.getRole())) {
+                        throw new ValidationException(
+                                "Le dépôt est réservé à un administrateur."
+                        );
+                    }
+                        effectuerDepot(
+                            exchange,
+                            readBody(exchange),
+                            client.getId(),
+                            true
+                        );
                     return;
                 }
 
                 if ("POST".equals(method) && "/api/withdrawals".equals(path)) {
-                    effectuerRetrait(exchange, readBody(exchange), clientId(exchange));
+                    Client client = client(exchange);
+                    if (!"ADMIN".equals(client.getRole())) {
+                        throw new ValidationException(
+                                "Le retrait est réservé à un administrateur."
+                        );
+                    }
+                    effectuerRetrait(exchange, readBody(exchange), client.getId());
                     return;
                 }
 
@@ -188,12 +208,18 @@ public class ApiServer {
         send(exchange, 200, "{\"message\":\"Transfert effectué avec succès.\"}");
     }
 
-    private void effectuerDepot(HttpExchange exchange, String body, long clientId)
+    private void effectuerDepot(
+            HttpExchange exchange,
+            String body,
+            long clientId,
+            boolean admin)
             throws Exception {
         Map<String, String> fields = parseJson(body);
         String compte = required(fields, "compte");
         double montant = Double.parseDouble(required(fields, "montant"));
-        banque.verifierProprietaire(compte, clientId);
+        if (!admin) {
+            banque.verifierProprietaire(compte, clientId);
+        }
         banque.deposer(compte, montant);
         send(exchange, 200, "{\"message\":\"Dépôt effectué avec succès.\"}");
     }
@@ -234,7 +260,9 @@ public class ApiServer {
                 "\"id\":" + client.getId() + "," +
                 "\"nom\":\"" + json(client.getNom()) + "\"," +
                 "\"prenom\":\"" + json(client.getPrenom()) + "\"," +
-                "\"email\":\"" + json(client.getEmail()) + "\"" +
+                "\"telephone\":\"" + json(client.getTelephone()) + "\"," +
+                "\"email\":\"" + json(client.getEmail()) + "\"," +
+                "\"role\":\"" + json(client.getRole()) + "\"" +
                 "}";
     }
 
@@ -290,6 +318,11 @@ public class ApiServer {
         } catch (NumberFormatException e) {
             throw new ValidationException("Identifiant client invalide.");
         }
+    }
+
+    private Client client(HttpExchange exchange)
+            throws SQLException, ClientIntrouvableException, ValidationException {
+        return banque.rechercherClient(clientId(exchange));
     }
 
     private String readBody(HttpExchange exchange) throws IOException {

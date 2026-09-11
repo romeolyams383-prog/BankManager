@@ -4,9 +4,15 @@ const state = {
 };
 
 const API_URL = "http://localhost:8080/api";
-const client = JSON.parse(localStorage.getItem("bankmanager-client") || "null");
+let client = null;
+
+try {
+    client = JSON.parse(localStorage.getItem("bankmanager-client") || "null");
+} catch (error) {
+    localStorage.removeItem("bankmanager-client");
+}
 const euro = amount => new Intl.NumberFormat("fr-FR", { style: "currency", currency: "EUR" }).format(amount);
-const shortNumber = id => id.replace("CM-", "•••• ") + "";
+const shortNumber = id => id;
 const accountIcon = type => type === "EPARGNE" ? "◒" : "◉";
 
 function apiFetch(path, options = {}) {
@@ -17,12 +23,18 @@ function apiFetch(path, options = {}) {
 
 function renderAccounts(targetId = "account-grid", includeAdd = true) {
     const target = document.getElementById(targetId);
+    if (!target) return;
     target.innerHTML = state.accounts.map(account => `
         <article class="account-card ${account.dark ? "savings" : ""}" data-account="${account.id}">
             <div class="card-top"><span class="card-type">${account.name}</span><span class="card-symbol">${accountIcon(account.type)}</span></div>
-            <div class="card-bottom"><div><div class="card-balance">${euro(account.balance)}</div><div class="card-number">${shortNumber(account.id)}</div></div><span>→</span></div>
+            <div class="card-bottom"><div><div class="card-balance">${euro(account.balance)}</div><div class="card-number">Numero du compte : ${shortNumber(account.id)}</div></div><span>→</span></div>
+            <button class="card-transfer" type="button" data-transfer-account="${account.id}">Transférer depuis ce compte <span>→</span></button>
         </article>`).join("") + (includeAdd ? `<button class="account-card add-card" id="add-account-card"><span><span class="plus">＋</span><br>Ouvrir un compte</span></button>` : "");
     target.querySelectorAll("[data-account]").forEach(card => card.addEventListener("click", () => openTransfer(card.dataset.account)));
+    target.querySelectorAll("[data-transfer-account]").forEach(button => button.addEventListener("click", event => {
+        event.stopPropagation();
+        openTransfer(button.dataset.transferAccount);
+    }));
     const add = document.getElementById("add-account-card");
     if (add) add.addEventListener("click", () => openModal("account-modal"));
 }
@@ -60,7 +72,11 @@ async function loadData() {
 }
 
 function renderTransactions() {
-    document.getElementById("recent-transactions").innerHTML = state.transactions.slice(0, 3).map(transactionMarkup).join("");
+    const recent = state.transactions.slice(0, 5).map(transactionMarkup).join("");
+    const overviewRecent = document.getElementById("recent-transactions");
+    const accountRecent = document.getElementById("account-recent-transactions");
+    if (overviewRecent) overviewRecent.innerHTML = recent;
+    if (accountRecent) accountRecent.innerHTML = recent || "<p class=\"empty-state\">Aucune opération enregistrée.</p>";
     const filter = document.getElementById("transaction-filter");
     filter.innerHTML = `<option value="all">Tous les comptes</option>` + state.accounts.map(account => `<option value="${account.id}">${account.name}</option>`).join("");
     const renderAll = () => {
@@ -72,12 +88,20 @@ function renderTransactions() {
 }
 
 function renderBalance() {
-    document.getElementById("total-balance").textContent = euro(state.accounts.reduce((total, account) => total + account.balance, 0));
+    const balance = euro(state.accounts.reduce((total, account) => total + account.balance, 0));
+    const overviewBalance = document.getElementById("total-balance");
+    const accountBalance = document.getElementById("account-total-balance");
+    if (overviewBalance) overviewBalance.textContent = balance;
+    if (accountBalance) accountBalance.textContent = balance;
 }
 
 function openModal(id) { document.getElementById(id).hidden = false; }
 function closeModal(id) { document.getElementById(id).hidden = true; }
 function openTransfer(sourceId = state.accounts[0].id) {
+    if (!state.accounts.length) {
+        window.alert("Aucun compte disponible pour effectuer un transfert.");
+        return;
+    }
     const source = document.getElementById("source-account");
     source.innerHTML = state.accounts.map(account => `<option value="${account.id}" ${account.id === sourceId ? "selected" : ""}>${account.name} - ${euro(account.balance)}</option>`).join("");
     document.getElementById("transfer-message").textContent = "";
@@ -121,16 +145,15 @@ document.getElementById("transfer-form").addEventListener("submit", async event 
     const destinationId = document.getElementById("destination-account").value.trim().toUpperCase();
     const amount = Number(document.getElementById("transfer-amount").value);
     const source = state.accounts.find(account => account.id === sourceId);
-    const destination = state.accounts.find(account => account.id === destinationId);
     const message = document.getElementById("transfer-message");
-    if (!destination) { message.textContent = "Compte destinataire introuvable."; return; }
-    if (destination.id === source.id) { message.textContent = "Le compte source et le destinataire doivent être différents."; return; }
+    if (!destinationId) { message.textContent = "Entrez le numéro du compte destinataire."; return; }
+    if (destinationId === source.id) { message.textContent = "Le compte source et le destinataire doivent être différents."; return; }
     if (!amount || amount <= 0) { message.textContent = "Le montant doit être supérieur à zéro."; return; }
     if (source.balance < amount) { message.textContent = "Solde insuffisant pour effectuer ce transfert."; return; }
     const response = await apiFetch("/transfers", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ source: source.id, destination: destination.id, montant: amount })
+        body: JSON.stringify({ source: source.id, destination: destinationId, montant: amount })
     });
     const result = await response.json();
     if (!response.ok) { message.textContent = result.error || "Le transfert a échoué."; return; }
@@ -140,15 +163,20 @@ document.getElementById("transfer-form").addEventListener("submit", async event 
 
 document.getElementById("account-form").addEventListener("submit", async event => {
     event.preventDefault();
+    const message = document.getElementById("account-message");
     const response = await apiFetch("/accounts", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ type: document.getElementById("account-type").value })
     });
-    if (!response.ok) return;
+    const result = await response.json();
+    if (!response.ok) {
+        message.textContent = result.error || "Création impossible.";
+        return;
+    }
+    document.getElementById("account-number-result").textContent = `Numéro généré : ${result.id}`;
+    document.getElementById("account-number-result").hidden = false;
     await loadData();
-    closeModal("account-modal");
-    event.target.reset();
 });
 
 document.getElementById("operation-form").addEventListener("submit", async event => {
@@ -176,25 +204,59 @@ document.getElementById("operation-form").addEventListener("submit", async event
 async function connect(event) {
     event.preventDefault();
     const message = document.getElementById("login-message");
-    const response = await fetch(`${API_URL}/login`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-            email: document.getElementById("login-email").value,
-            motDePasse: document.getElementById("login-password").value
-        })
-    });
-    const result = await response.json();
-    if (!response.ok) {
-        message.textContent = result.error || "Email ou mot de passe incorrect.";
-        return;
+    const button = event.submitter;
+    button.disabled = true;
+    button.firstChild.textContent = "Connexion en cours ";
+
+    try {
+        const response = await fetch(`${API_URL}/login`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                email: document.getElementById("login-email").value.trim(),
+                motDePasse: document.getElementById("login-password").value
+            })
+        });
+        const responseText = await response.text();
+        let result = {};
+        if (responseText.trim()) {
+            try {
+                result = JSON.parse(responseText);
+            } catch (error) {
+                result = {};
+            }
+        }
+        if (!response.ok) {
+            message.textContent = result.error || "Email ou mot de passe incorrect.";
+            return;
+        }
+        localStorage.setItem("bankmanager-client", JSON.stringify(result));
+        window.location.reload();
+    } catch (error) {
+        message.textContent = "Impossible de joindre le serveur. Vérifiez que l'API est démarrée.";
+    } finally {
+        button.disabled = false;
+        button.firstChild.textContent = "Se connecter ";
     }
-    localStorage.setItem("bankmanager-client", JSON.stringify(result));
-    window.location.reload();
 }
 
 document.getElementById("login-form").addEventListener("submit", connect);
+document.getElementById("show-login").addEventListener("click", () => {
+    document.getElementById("auth-choice").hidden = true;
+    document.getElementById("login-panel").hidden = false;
+});
+document.getElementById("back-to-choice").addEventListener("click", () => {
+    document.getElementById("login-panel").hidden = true;
+    document.getElementById("auth-choice").hidden = false;
+});
 document.getElementById("show-register").addEventListener("click", () => openModal("register-modal"));
+document.querySelector(".profile-button").addEventListener("click", () => {
+    if (!client) return;
+    document.getElementById("profile-full-name").textContent = `${client.prenom} ${client.nom}`;
+    document.getElementById("profile-detail-email").textContent = client.email;
+    document.getElementById("profile-detail-phone").textContent = client.telephone || "Non renseigné";
+    openModal("profile-modal");
+});
 
 document.getElementById("register-form").addEventListener("submit", async event => {
     event.preventDefault();
@@ -222,11 +284,22 @@ document.getElementById("register-form").addEventListener("submit", async event 
 
 if (client) {
     document.body.classList.add("has-session");
+    document.getElementById("login-screen").style.display = "none";
     document.querySelector(".app-shell").classList.add("authenticated");
     document.querySelector(".profile-button strong").textContent = `${client.prenom} ${client.nom}`;
+    document.getElementById("profile-email").textContent = client.email;
     document.querySelector(".profile-button .avatar").textContent = `${client.prenom[0]}${client.nom[0]}`.toUpperCase();
+    document.getElementById("page-title").innerHTML = `Bonjour, ${client.prenom} <span class="wave">✦</span>`;
+    if (client.role !== "ADMIN") {
+        document.querySelectorAll(".admin-only").forEach(button => button.remove());
+    }
     loadData().catch(error => {
         document.getElementById("total-balance").textContent = "API indisponible";
         document.getElementById("recent-transactions").innerHTML = `<p class="empty-state">${error.message}</p>`;
     });
 }
+
+document.getElementById("logout-button").addEventListener("click", () => {
+    localStorage.removeItem("bankmanager-client");
+    window.location.reload();
+});

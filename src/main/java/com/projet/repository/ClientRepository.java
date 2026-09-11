@@ -15,8 +15,8 @@ public class ClientRepository {
 
         String sql =
                 "INSERT INTO client " +
-                "(id, nom, prenoms, telephone, email, mot_de_passe) " +
-                "VALUES (?, ?, ?, ?, ?, ?)";
+                "(id, nom, prenoms, telephone, email, mot_de_passe, role) " +
+                "VALUES (?, ?, ?, ?, ?, ?, ?)";
 
         try (Connection connection =
                      DatabaseConnection.getConnection();
@@ -29,6 +29,7 @@ public class ClientRepository {
             statement.setString(4, client.getTelephone());
             statement.setString(5, client.getEmail());
             statement.setString(6, client.getMotDePasse());
+            statement.setString(7, client.getRole());
 
             statement.executeUpdate();
         }
@@ -60,7 +61,8 @@ public class ClientRepository {
                                 result.getString("prenoms"),
                                 result.getString("telephone"),
                                 result.getString("email"),
-                                result.getString("mot_de_passe")
+                                result.getString("mot_de_passe"),
+                                result.getString("role")
                         );
 
                     } catch (Exception e) {
@@ -102,7 +104,8 @@ public class ClientRepository {
                                                                 result.getString("prenoms"),
                                                                 result.getString("telephone"),
                                                                 result.getString("email"),
-                                                                result.getString("mot_de_passe")
+                                                                result.getString("mot_de_passe"),
+                                                                result.getString("role")
                                                 );
                                         } catch (Exception e) {
                                                 throw new SQLException(
@@ -141,7 +144,8 @@ public class ClientRepository {
                             result.getString("prenoms"),
                             result.getString("telephone"),
                             result.getString("email"),
-                            result.getString("mot_de_passe")
+                            result.getString("mot_de_passe"),
+                            result.getString("role")
                     );
 
                     clients.add(client);

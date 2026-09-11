@@ -91,7 +91,7 @@ public class CompteRepository {
         String sql =
                 "SELECT c.*, " +
                 "cl.nom, cl.prenoms, cl.telephone, " +
-                "cl.email, cl.mot_de_passe " +
+                "cl.email, cl.mot_de_passe, cl.role " +
                 "FROM comptes c " +
                 "JOIN client cl ON c.client_id = cl.id " +
                 "WHERE c.numero_compte = ?";
@@ -116,7 +116,8 @@ public class CompteRepository {
                                 result.getString("prenoms"),
                                 result.getString("telephone"),
                                 result.getString("email"),
-                                result.getString("mot_de_passe")
+                                result.getString("mot_de_passe"),
+                                result.getString("role")
                         );
 
                         String type =
@@ -171,7 +172,7 @@ public class CompteRepository {
                 String sql =
                                 "SELECT c.*, " +
                                 "cl.nom, cl.prenoms, cl.telephone, " +
-                                "cl.email, cl.mot_de_passe " +
+                                "cl.email, cl.mot_de_passe, cl.role " +
                                 "FROM comptes c " +
                                 "JOIN client cl ON c.client_id = cl.id " +
                                 "ORDER BY c.numero_compte";
@@ -194,7 +195,7 @@ public class CompteRepository {
                 List<Compte> comptes = new ArrayList<Compte>();
                 String sql =
                                 "SELECT c.*, cl.nom, cl.prenoms, cl.telephone, " +
-                                "cl.email, cl.mot_de_passe " +
+                                "cl.email, cl.mot_de_passe, cl.role " +
                                 "FROM comptes c JOIN client cl ON c.client_id = cl.id " +
                                 "WHERE c.client_id = ? ORDER BY c.numero_compte";
 
@@ -221,7 +222,8 @@ public class CompteRepository {
                                         result.getString("prenoms"),
                                         result.getString("telephone"),
                                         result.getString("email"),
-                                        result.getString("mot_de_passe")
+                                        result.getString("mot_de_passe"),
+                                        result.getString("role")
                         );
 
                         Compte compte;

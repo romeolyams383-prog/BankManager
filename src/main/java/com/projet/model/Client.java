@@ -12,6 +12,7 @@ public class Client {
     private String telephone;
     private String email;
     private String motDePasse;
+    private String role;
 
     public Client(long id,
                   String nom,
@@ -19,6 +20,18 @@ public class Client {
                   String telephone,
                   String email,
                   String motDePasse)
+            throws ValidationException {
+
+          this(id, nom, prenom, telephone, email, motDePasse, "CLIENT");
+        }
+
+        public Client(long id,
+                String nom,
+                String prenom,
+                String telephone,
+                String email,
+                String motDePasse,
+                String role)
             throws ValidationException {
 
         if (id <= 0) {
@@ -32,6 +45,7 @@ public class Client {
         ValidationUtils.verifierTexte(telephone, "téléphone");
         ValidationUtils.verifierEmail(email);
         ValidationUtils.verifierMotDePasse(motDePasse);
+        ValidationUtils.verifierTexte(role, "rôle");
 
         this.id = id;
         this.nom = nom;
@@ -39,6 +53,7 @@ public class Client {
         this.telephone = telephone;
         this.email = email;
         this.motDePasse = motDePasse;
+        this.role = role.toUpperCase();
     }
 
     public long getId() {
@@ -63,6 +78,10 @@ public class Client {
 
     public String getMotDePasse() {
         return motDePasse;
+    }
+
+    public String getRole() {
+        return role;
     }
 
     @Override

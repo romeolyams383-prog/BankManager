@@ -11,9 +11,14 @@ CREATE TABLE IF NOT EXISTS client (
     telephone VARCHAR(30) NOT NULL,
     email VARCHAR(255) NOT NULL,
     mot_de_passe VARCHAR(255) NOT NULL,
+    role VARCHAR(20) NOT NULL DEFAULT 'CLIENT',
     PRIMARY KEY (id),
     UNIQUE KEY uq_client_email (email)
 ) ENGINE=InnoDB;
+
+-- Migration for an existing installation:
+-- ALTER TABLE client ADD COLUMN role VARCHAR(20) NOT NULL DEFAULT 'CLIENT';
+-- UPDATE client SET role = 'ADMIN' WHERE email = 'admin@bankmanager.local';
 
 CREATE TABLE IF NOT EXISTS comptes (
     numero_compte VARCHAR(50) NOT NULL,
